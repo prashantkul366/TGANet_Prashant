@@ -325,7 +325,11 @@ if __name__ == "__main__":
     num_epochs = 1000
     lr = 1e-4
     early_stopping_patience = 100
-    checkpoint_path = "files/checkpoint.pth"
+    # checkpoint_path = "files/checkpoint.pth"
+    checkpoint_dir = "/content/drive/MyDrive/Prashant/TGANet_Prashant"
+    os.makedirs(checkpoint_dir, exist_ok=True)
+
+    checkpoint_path = os.path.join(checkpoint_dir, "checkpoint.pth")
     # path = "/media/nikhil/Seagate Backup Plus Drive/ML_DATASET/Kvasir-SEG"
     path = "/content/drive/MyDrive/Prashant/research_datasets/Kvasir_80_20_TEXT_NEW"
 
