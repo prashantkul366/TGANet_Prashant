@@ -411,6 +411,7 @@ if __name__ == "__main__":
             early_stopping_count += 1
 
         print(f"Best f1 so far: {best_valid_metrics}")
+        print(f"Early Stop Counter: {early_stopping_count}/{early_stopping_patience}", flush=True)
         end_time = time.time()
         epoch_mins, epoch_secs = epoch_time(start_time, end_time)
 
