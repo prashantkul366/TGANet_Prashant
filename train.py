@@ -306,9 +306,9 @@ if __name__ == "__main__":
     image_size = 256
     size = (image_size, image_size)
     batch_size = 16
-    num_epochs = 500
+    num_epochs = 1000
     lr = 1e-4
-    early_stopping_patience = 50
+    early_stopping_patience = 100
     checkpoint_path = "files/checkpoint.pth"
     # path = "/media/nikhil/Seagate Backup Plus Drive/ML_DATASET/Kvasir-SEG"
     path = "/content/drive/MyDrive/Prashant/research_datasets/Kvasir_80_20_TEXT_NEW"
