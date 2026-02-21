@@ -267,7 +267,7 @@ class TGAPolypSeg(nn.Module):
 
     def forward(self, image, label):
         """ Backbone: ResNet50 """
-        print("training")
+        # print("training")
         x0 = image
         x1 = self.layer0(x0)    ## [-1, 64, h/2, w/2]
         x2 = self.layer1(x1)    ## [-1, 256, h/4, w/4]
