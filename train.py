@@ -394,6 +394,7 @@ if __name__ == "__main__":
         elif valid_metrics[1] < best_valid_metrics:
             early_stopping_count += 1
 
+        print(f"Best f1 so far: {best_valid_metrics}")
         end_time = time.time()
         epoch_mins, epoch_secs = epoch_time(start_time, end_time)
 
