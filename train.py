@@ -89,6 +89,7 @@ class DATASET(Dataset):
         print(f"Inside dataset")
         self.embed = Text2Embed()
 
+
     def mask_to_text(self, mask):
         bboxes = mask_to_bbox(mask)
         num_polyps = 0 if len(bboxes) == 1 else 1
@@ -358,8 +359,16 @@ if __name__ == "__main__":
     train_x, train_y, train_label = load_from_excel(train_path, "Train_text.xlsx")
     valid_x, valid_y, valid_label = load_from_excel(val_path, "Val_text.xlsx")
 
+    print("Loaded Excel Files")
+    print(f"Train samples (from excel): {len(train_x)}")
+    print(f"Val samples   (from excel): {len(valid_x)}")
+
     train_dataset = DATASET(train_x, train_label, train_y, size, transform=transform)
     valid_dataset = DATASET(valid_x, valid_label, valid_y, size, transform=None)
+
+    print("Dataset Objects Created")
+    print(f"Train Dataset Length: {len(train_dataset)}")
+    print(f"Val Dataset Length  : {len(valid_dataset)}")
 
     train_loader = DataLoader(
         dataset=train_dataset,
@@ -374,6 +383,11 @@ if __name__ == "__main__":
         shuffle=False,
         num_workers=2
     )
+
+    print("Dataloader Info")
+    print(f"Train Batches: {len(train_loader)}")
+    print(f"Val Batches  : {len(valid_loader)}")
+    print("==================================\n")
 
     """ Model """
     # device = torch.device('cuda')
