@@ -385,6 +385,7 @@ if __name__ == "__main__":
 
             best_valid_metrics = valid_metrics[1]
             torch.save(model.state_dict(), checkpoint_path)
+            print(f"Model Saved at {checkpoint_path}")
             early_stopping_count = 0
 
         elif valid_metrics[1] < best_valid_metrics:
