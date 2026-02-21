@@ -14,26 +14,66 @@ from text2embed import Text2Embed
 from utils import seeding, create_dir, print_and_save, shuffling, epoch_time, calculate_metrics, label_dictionary, mask_to_bbox
 from model import TGAPolypSeg
 from metrics import DiceLoss, DiceBCELoss, MultiClassBCE
+import re
+import pandas as pd
 
-def load_names(path, file_path):
-    f = open(file_path, "r")
-    data = f.read().split("\n")[:-1]
-    images = [os.path.join(path,"images", name) + ".jpg" for name in data]
-    masks = [os.path.join(path,"masks", name) + ".jpg" for name in data]
-    return images, masks
+def load_from_excel(split_path, excel_name):
+    excel_path = os.path.join(split_path, excel_name)
+    df = pd.read_excel(excel_path)
 
-def load_data(path):
-    train_names_path = f"{path}/train.txt"
-    valid_names_path = f"{path}/val.txt"
+    images = []
+    masks = []
+    labels = []
 
-    train_x, train_y = load_names(path, train_names_path)
-    valid_x, valid_y = load_names(path, valid_names_path)
+    for _, row in df.iterrows():
+        img_path = os.path.join(split_path, "images", row["image_name"])
+        mask_path = os.path.join(split_path, "masks", row["mask_name"])
+        prompt = row["prompt_text"]
 
-    label_dict = label_dictionary()
-    train_label = len(train_x) * [label_dict["polyp"]]
-    valid_label = len(valid_x) * [label_dict["polyp"]]
+        images.append(img_path)
+        masks.append(mask_path)
+        labels.append(prompt)
 
-    return (train_x, train_y, train_label), (valid_x, valid_y, valid_label)
+    return images, masks, labels
+
+# def load_names(path, file_path):
+#     f = open(file_path, "r")
+#     data = f.read().split("\n")[:-1]
+#     images = [os.path.join(path,"images", name) + ".jpg" for name in data]
+#     masks = [os.path.join(path,"masks", name) + ".jpg" for name in data]
+#     return images, masks
+
+# def load_data(path):
+#     train_names_path = f"{path}/train.txt"
+#     valid_names_path = f"{path}/val.txt"
+
+#     train_x, train_y = load_names(path, train_names_path)
+#     valid_x, valid_y = load_names(path, valid_names_path)
+
+#     label_dict = label_dictionary()
+#     train_label = len(train_x) * [label_dict["polyp"]]
+#     valid_label = len(valid_x) * [label_dict["polyp"]]
+
+#     return (train_x, train_y, train_label), (valid_x, valid_y, valid_label)
+train_path = "/content/drive/MyDrive/Prashant/research_datasets/Kvasir_80_20_TEXT_NEW/train"
+val_path   = "/content/drive/MyDrive/Prashant/research_datasets/Kvasir_80_20_TEXT_NEW/val"
+
+# train_x, train_y, train_label = load_from_excel(train_path, "Train_text.xlsx")
+# valid_x, valid_y, valid_label = load_from_excel(val_path, "Val_text.xlsx")
+
+
+NUMBER_MAP = {
+    "one": 0,
+    "two": 1,
+    "three": 1,
+    "four": 1
+}
+
+SIZE_MAP = {
+    "small": 0,
+    "medium": 1,
+    "large": 2
+}
 
 class DATASET(Dataset):
     def __init__(self, images_path, labels_path, masks_path, size, transform=None):
@@ -43,8 +83,9 @@ class DATASET(Dataset):
         self.labels_path = labels_path
         self.masks_path = masks_path
         self.transform = transform
+        self.size = size 
         self.n_samples = len(images_path)
-
+        print(f"Inside dataset")
         self.embed = Text2Embed()
 
     def mask_to_text(self, mask):
@@ -67,6 +108,25 @@ class DATASET(Dataset):
 
         return np.array(num_polyps), np.array(polyp_sizes)
 
+    def parse_prompt(self, sentence):
+        sentence = sentence.lower()
+
+        # ----- number -----
+        num_match = re.search(r'\b(one|two|three|four)\b', sentence)
+        if num_match:
+            num_class = NUMBER_MAP[num_match.group(1)]
+        else:
+            num_class = 0  # default one
+
+        # ----- size -----
+        size_match = re.search(r'\b(small|medium|large)\b', sentence)
+        if size_match:
+            size_class = SIZE_MAP[size_match.group(1)]
+        else:
+            size_class = 1  # default medium
+
+        return num_class, size_class
+    
     def __getitem__(self, index):
         """ Reading Image & Mask """
         image = cv2.imread(self.images_path[index], cv2.IMREAD_COLOR)
@@ -79,28 +139,35 @@ class DATASET(Dataset):
             mask = augmentations["mask"]
 
         """ Image """
-        image = cv2.resize(image, size)
+        image = cv2.resize(image, self.size)
         image = np.transpose(image, (2, 0, 1))
         image = image/255.0
 
         """ Mask """
-        mask = cv2.resize(mask, size)
+        mask = cv2.resize(mask, self.size)
         mask_copy = mask
         mask = np.expand_dims(mask, axis=0)
         mask = mask/255.0
 
         """ Mask to Textual information """
-        num_polyps, polyp_sizes = self.mask_to_text(mask_copy)
+        # num_polyps, polyp_sizes = self.mask_to_text(mask_copy)
 
         """ Label """
-        label = []
-        words = self.labels_path[index]
-        for word in words:
-            word_embed = self.embed.to_embed(word)[0]
-            label.append(word_embed)
-        label = np.array(label)
+        # label = []
+        # words = self.labels_path[index]
+        # for word in words:
+        #     word_embed = self.embed.to_embed(word)[0]
+        #     label.append(word_embed)
+        # label = np.array(label)
 
-        return (image, label), (mask, num_polyps, polyp_sizes)
+        sentence = self.labels_path[index]
+        # Extract classification labels
+        num_class, size_class = self.parse_prompt(sentence)
+
+        # Text embedding (whole sentence)
+        label_embed = self.embed.to_embed(sentence)[0]  # shape (300,)
+
+        return (image, label_embed), (mask, num_class, size_class)
 
     def __len__(self):
         return self.n_samples
@@ -243,7 +310,8 @@ if __name__ == "__main__":
     lr = 1e-4
     early_stopping_patience = 50
     checkpoint_path = "files/checkpoint.pth"
-    path = "/media/nikhil/Seagate Backup Plus Drive/ML_DATASET/Kvasir-SEG"
+    # path = "/media/nikhil/Seagate Backup Plus Drive/ML_DATASET/Kvasir-SEG"
+    path = "/content/drive/MyDrive/Prashant/research_datasets/Kvasir_80_20_TEXT_NEW"
 
     data_str = f"Image Size: {size}\nBatch Size: {batch_size}\nLR: {lr}\nEpochs: {num_epochs}\n"
     data_str += f"Early Stopping Patience: {early_stopping_patience}\n"
@@ -258,14 +326,20 @@ if __name__ == "__main__":
     ])
 
     """ Dataset """
-    (train_x, train_y, train_label), (valid_x, valid_y, valid_label) = load_data(path)
-    train_x, train_y, train_label = shuffling(train_x, train_y, train_label)
-    data_str = f"Dataset Size:\nTrain: {len(train_x)} - Valid: {len(valid_x)}\n"
-    print_and_save(train_log_path, data_str)
+    # (train_x, train_y, train_label), (valid_x, valid_y, valid_label) = load_data(path)
+    # train_x, train_y, train_label = shuffling(train_x, train_y, train_label)
+    # data_str = f"Dataset Size:\nTrain: {len(train_x)} - Valid: {len(valid_x)}\n"
+    # print_and_save(train_log_path, data_str)
 
     """ Dataset and loader """
-    train_dataset = DATASET(train_x, train_label, train_y, (image_size, image_size), transform=transform)
-    valid_dataset = DATASET(valid_x, valid_label, valid_y, (image_size, image_size), transform=None)
+    # train_dataset = DATASET(train_x, train_label, train_y, (image_size, image_size), transform=transform)
+    # valid_dataset = DATASET(valid_x, valid_label, valid_y, (image_size, image_size), transform=None)
+
+    train_x, train_y, train_label = load_from_excel(train_path, "Train_text.xlsx")
+    valid_x, valid_y, valid_label = load_from_excel(val_path, "Val_text.xlsx")
+
+    train_dataset = DATASET(train_x, train_label, train_y, size, transform=transform)
+    valid_dataset = DATASET(valid_x, valid_label, valid_y, size, transform=None)
 
     train_loader = DataLoader(
         dataset=train_dataset,
@@ -282,7 +356,8 @@ if __name__ == "__main__":
     )
 
     """ Model """
-    device = torch.device('cuda')
+    # device = torch.device('cuda')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = TGAPolypSeg()
     model = model.to(device)
 

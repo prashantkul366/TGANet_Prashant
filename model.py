@@ -234,6 +234,7 @@ class TGAPolypSeg(nn.Module):
     def __init__(self):
         super().__init__()
 
+        print("Inside TGA")
         """ Backbone: ResNet50 """
         backbone = resnet50()
         self.layer0 = nn.Sequential(backbone.conv1, backbone.bn1, backbone.relu)
