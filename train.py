@@ -362,7 +362,10 @@ if __name__ == "__main__":
     model = model.to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=5, verbose=True)
+    # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=5, verbose=True)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer, mode='min', patience=5
+        )
     loss_fn = [DiceBCELoss(), nn.CrossEntropyLoss(), nn.CrossEntropyLoss()]
     loss_name = "BCE Dice Loss"
     data_str = f"Optimizer: Adam\nLoss: {loss_name}\n"
