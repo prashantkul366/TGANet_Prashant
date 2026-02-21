@@ -16,6 +16,7 @@ from model import TGAPolypSeg
 from metrics import DiceLoss, DiceBCELoss, MultiClassBCE
 import re
 import pandas as pd
+from tqdm import tqdm
 
 def load_from_excel(split_path, excel_name):
     excel_path = os.path.join(split_path, excel_name)
@@ -189,7 +190,10 @@ def train(model, loader, optimizer, loss_fn, device):
     epoch_recall = 0.0
     epoch_precision = 0.0
 
-    for i, ((x, l), (y1, y2, y3)) in enumerate(loader):
+    loop = tqdm(loader, desc="Training", leave=False)
+
+    for i, ((x, l), (y1, y2, y3)) in enumerate(loop):
+    # for i, ((x, l), (y1, y2, y3)) in enumerate(loader):
         x = x.to(device, dtype=torch.float32)
         l = l.to(device, dtype=torch.float32)
         y1 = y1.to(device, dtype=torch.float32)
@@ -208,7 +212,7 @@ def train(model, loader, optimizer, loss_fn, device):
         loss.backward()
         optimizer.step()
         epoch_loss += loss.item()
-
+        loop.set_postfix(loss=loss.item())
         """ Calculate the metrics """
         batch_jac = []
         batch_f1 = []
@@ -246,7 +250,10 @@ def evaluate(model, loader, loss_fn, device):
     epoch_precision = 0.0
 
     with torch.no_grad():
-        for i, ((x, l), (y1, y2, y3)) in enumerate(loader):
+        loop = tqdm(loader, desc="Validation", leave=False)
+
+        for i, ((x, l), (y1, y2, y3)) in enumerate(loop):
+        # for i, ((x, l), (y1, y2, y3)) in enumerate(loader):
             x = x.to(device, dtype=torch.float32)
             l = l.to(device, dtype=torch.float32)
             y1 = y1.to(device, dtype=torch.float32)
@@ -262,6 +269,7 @@ def evaluate(model, loader, loss_fn, device):
             loss3 = loss_fn[2](p3, y3)
             loss = loss1 + loss2 + loss3
             epoch_loss += loss.item()
+            loop.set_postfix(val_loss=loss.item())
 
             """ Calculate the metrics """
             batch_jac = []
