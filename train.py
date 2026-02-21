@@ -165,7 +165,15 @@ class DATASET(Dataset):
         num_class, size_class = self.parse_prompt(sentence)
 
         # Text embedding (whole sentence)
-        label_embed = self.embed.to_embed(sentence)[0]  # shape (300,)
+        # label_embed = self.embed.to_embed(sentence)[0]  # shape (300,)
+        attributes = ["one", "two", "small", "medium", "large"]
+
+        embeds = []
+        for word in attributes:
+            vec = self.embed.to_embed(word)[0]
+            embeds.append(vec)
+
+        label_embed = np.stack(embeds, axis=0)  # (5,300)
 
         return (image, label_embed), (mask, num_class, size_class)
 
