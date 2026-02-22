@@ -400,7 +400,7 @@ if __name__ == "__main__":
     # valid_dataset = DATASET(valid_x, valid_label, valid_y, (image_size, image_size), transform=None)
 
     train_x, train_y, train_label = load_from_excel(train_path, "Train_text.xlsx")
-    valid_x, valid_y, valid_label = load_from_excel(val_path, "Val_text.xlsx")
+    valid_x, valid_y, valid_label = load_from_excel(val_path, "Test_text.xlsx")
 
     print("Loaded Excel Files")
     print(f"Train samples (from excel): {len(train_x)}")
