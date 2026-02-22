@@ -18,6 +18,25 @@ import re
 import pandas as pd
 from tqdm import tqdm
 
+# def load_from_excel(split_path, excel_name):
+#     excel_path = os.path.join(split_path, excel_name)
+#     df = pd.read_excel(excel_path)
+
+#     images = []
+#     masks = []
+#     labels = []
+
+#     for _, row in df.iterrows():
+#         img_path = os.path.join(split_path, "images", row["image_name"])
+#         mask_path = os.path.join(split_path, "masks", row["mask_name"])
+#         prompt = row["prompt_text"]
+
+#         images.append(img_path)
+#         masks.append(mask_path)
+#         labels.append(prompt)
+
+#     return images, masks, labels
+
 def load_from_excel(split_path, excel_name):
     excel_path = os.path.join(split_path, excel_name)
     df = pd.read_excel(excel_path)
@@ -27,9 +46,16 @@ def load_from_excel(split_path, excel_name):
     labels = []
 
     for _, row in df.iterrows():
-        img_path = os.path.join(split_path, "images", row["image_name"])
-        mask_path = os.path.join(split_path, "masks", row["mask_name"])
-        prompt = row["prompt_text"]
+        filename = row["Filename"]
+        prompt = row["Text"]
+
+        # image path
+        img_path = os.path.join(split_path, "images", filename)
+
+        # mask naming in BUSI:
+        # benign (242).png  → benign (242)_mask.png
+        mask_name = filename.replace(".png", "_mask.png")
+        mask_path = os.path.join(split_path, "masks", mask_name)
 
         images.append(img_path)
         masks.append(mask_path)
@@ -56,8 +82,14 @@ def load_from_excel(split_path, excel_name):
 #     valid_label = len(valid_x) * [label_dict["polyp"]]
 
 #     return (train_x, train_y, train_label), (valid_x, valid_y, valid_label)
-train_path = "/content/drive/MyDrive/Prashant/research_datasets/Kvasir_80_20_TEXT_NEW/train"
-val_path   = "/content/drive/MyDrive/Prashant/research_datasets/Kvasir_80_20_TEXT_NEW/val"
+
+
+
+# train_path = "/content/drive/MyDrive/Prashant/research_datasets/Kvasir_80_20_TEXT_NEW/train"
+# val_path   = "/content/drive/MyDrive/Prashant/research_datasets/Kvasir_80_20_TEXT_NEW/val"
+train_path = "/content/drive/MyDrive/Prashant/research_datasets/Dataset_BUSI_80_20_TEXT_NEW/train"
+val_path   = "/content/drive/MyDrive/Prashant/research_datasets/Dataset_BUSI_80_20_TEXT_NEW/test"
+
 
 # train_x, train_y, train_label = load_from_excel(train_path, "Train_text.xlsx")
 # valid_x, valid_y, valid_label = load_from_excel(val_path, "Val_text.xlsx")
@@ -70,12 +102,18 @@ NUMBER_MAP = {
     "four": 1
 }
 
+# SIZE_MAP = {
+#     "small": 0,
+#     "medium": 1,
+#     "large": 2
+# }
+
+
 SIZE_MAP = {
     "small": 0,
     "medium": 1,
     "large": 2
 }
-
 class DATASET(Dataset):
     def __init__(self, images_path, labels_path, masks_path, size, transform=None):
         super().__init__()
@@ -168,7 +206,11 @@ class DATASET(Dataset):
 
         # Text embedding (whole sentence)
         # label_embed = self.embed.to_embed(sentence)[0]  # shape (300,)
-        attributes = ["one", "two", "small", "medium", "large"]
+        # attributes = ["one", "two", "small", "medium", "large"]
+        attributes = [
+            "small", "medium", "large",
+            "benign", "malignant"
+        ]
 
         embeds = []
         for word in attributes:
@@ -330,9 +372,10 @@ if __name__ == "__main__":
     checkpoint_dir = "/content/drive/MyDrive/Prashant/TGANet_Prashant"
     os.makedirs(checkpoint_dir, exist_ok=True)
 
-    checkpoint_path = os.path.join(checkpoint_dir, "checkpoint.pth")
+    checkpoint_path = os.path.join(checkpoint_dir, "busi_checkpoint.pth")
     # path = "/media/nikhil/Seagate Backup Plus Drive/ML_DATASET/Kvasir-SEG"
-    path = "/content/drive/MyDrive/Prashant/research_datasets/Kvasir_80_20_TEXT_NEW"
+    # path = "/content/drive/MyDrive/Prashant/research_datasets/Kvasir_80_20_TEXT_NEW"
+    path = "/content/drive/MyDrive/Prashant/research_datasets/Dataset_BUSI_80_20_TEXT_NEW"
 
     data_str = f"Image Size: {size}\nBatch Size: {batch_size}\nLR: {lr}\nEpochs: {num_epochs}\n"
     data_str += f"Early Stopping Patience: {early_stopping_patience}\n"
