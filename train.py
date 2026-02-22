@@ -55,7 +55,8 @@ def load_from_excel(split_path, excel_name):
         # mask naming in BUSI:
         # benign (242).png  → benign (242)_mask.png
         mask_name = filename.replace(".png", "_mask.png")
-        mask_path = os.path.join(split_path, "masks", mask_name)
+        # mask_path = os.path.join(split_path, "masks", mask_name)
+        mask_path = os.path.join(split_path, "masks", filename)
 
         images.append(img_path)
         masks.append(mask_path)
@@ -171,6 +172,9 @@ class DATASET(Dataset):
         """ Reading Image & Mask """
         image = cv2.imread(self.images_path[index], cv2.IMREAD_COLOR)
         mask = cv2.imread(self.masks_path[index], cv2.IMREAD_GRAYSCALE)
+    
+        # if mask is None:
+        #     mask = np.zeros((self.size[0], self.size[1]), dtype=np.uint8)
 
         """ Applying Data Augmentation """
         if self.transform is not None:
