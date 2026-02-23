@@ -15,29 +15,6 @@ from utils import calculate_metrics
 from text2embed import Text2Embed
 import pandas as pd
 
-def load_from_excel(split_path, excel_name):
-    excel_path = os.path.join(split_path, excel_name)
-    df = pd.read_excel(excel_path)
-
-    images = []
-    masks = []
-    labels = []
-
-    for _, row in df.iterrows():
-        filename = row["Filename"]     
-        prompt = row["Text"]         
-
-        img_path = os.path.join(split_path, "images", filename)
-
-        # BUSI masks have SAME name
-        mask_path = os.path.join(split_path, "masks", filename)
-
-        images.append(img_path)
-        masks.append(mask_path)
-        labels.append(prompt)
-
-    return images, masks, labels
-
 # def load_from_excel(split_path, excel_name):
 #     excel_path = os.path.join(split_path, excel_name)
 #     df = pd.read_excel(excel_path)
@@ -47,20 +24,43 @@ def load_from_excel(split_path, excel_name):
 #     labels = []
 
 #     for _, row in df.iterrows():
-#         filename = row["image_name"]
-#         prompt = row["prompt_text"]
+#         filename = row["Filename"]     
+#         prompt = row["Text"]         
 
 #         img_path = os.path.join(split_path, "images", filename)
 
-#         # 🔥 FIX: replace .jpg with .png for mask
-#         mask_name = filename.replace(".jpg", ".png")
-#         mask_path = os.path.join(split_path, "masks", mask_name)
+#         # BUSI masks have SAME name
+#         mask_path = os.path.join(split_path, "masks", filename)
 
 #         images.append(img_path)
 #         masks.append(mask_path)
 #         labels.append(prompt)
 
 #     return images, masks, labels
+
+def load_from_excel(split_path, excel_name):
+    excel_path = os.path.join(split_path, excel_name)
+    df = pd.read_excel(excel_path)
+
+    images = []
+    masks = []
+    labels = []
+
+    for _, row in df.iterrows():
+        filename = row["image_name"]
+        prompt = row["prompt_text"]
+
+        img_path = os.path.join(split_path, "images", filename)
+
+        # 🔥 FIX: replace .jpg with .png for mask
+        mask_name = filename.replace(".jpg", ".png")
+        mask_path = os.path.join(split_path, "masks", mask_name)
+
+        images.append(img_path)
+        masks.append(mask_path)
+        labels.append(prompt)
+
+    return images, masks, labels
 
 def process_mask(y_pred):
     y_pred = y_pred[0].cpu().numpy()
