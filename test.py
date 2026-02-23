@@ -183,7 +183,8 @@ if __name__ == "__main__":
     # path = "/content/drive/MyDrive/Prashant/research_datasets/Kvasir_80_20_TEXT_NEW"
     # (train_x, train_y, train_label), (test_x, test_y, test_label) = load_data(path)
 
-    test_path = "/content/drive/MyDrive/Prashant/research_datasets/Dataset_BUSI_80_20_TEXT_NEW/test"
+    test_path = "/content/drive/MyDrive/Prashant/research_datasets/Kvasir_80_20_TEXT_NEW"
+    # test_path = "/content/drive/MyDrive/Prashant/research_datasets/Dataset_BUSI_80_20_TEXT_NEW/test"
     test_x, test_y, test_label = load_from_excel(test_path, "Test_text.xlsx")
     print("DATASET LOADED")
     print("Loaded Excel Files")
