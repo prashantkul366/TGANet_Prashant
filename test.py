@@ -11,8 +11,30 @@ import torch
 from model import TGAPolypSeg
 from utils import create_dir, seeding
 from utils import calculate_metrics
-from train import load_data
+
 from text2embed import Text2Embed
+import pandas as pd
+
+def load_from_excel(split_path, excel_name):
+    excel_path = os.path.join(split_path, excel_name)
+    df = pd.read_excel(excel_path)
+
+    images = []
+    masks = []
+    labels = []
+
+    for _, row in df.iterrows():
+        filename = row["Filename"]
+        prompt = row["Text"]
+
+        img_path = os.path.join(split_path, "images", filename)
+        mask_path = os.path.join(split_path, "masks", filename)
+
+        images.append(img_path)
+        masks.append(mask_path)
+        labels.append(prompt)
+
+    return images, masks, labels
 
 def process_mask(y_pred):
     y_pred = y_pred[0].cpu().numpy()
@@ -25,18 +47,32 @@ def process_mask(y_pred):
     y_pred = np.concatenate([y_pred, y_pred, y_pred], axis=2)
     return y_pred
 
-def print_score(metrics_score):
-    jaccard = metrics_score[0]/len(test_x)
-    f1 = metrics_score[1]/len(test_x)
-    recall = metrics_score[2]/len(test_x)
-    precision = metrics_score[3]/len(test_x)
-    acc = metrics_score[4]/len(test_x)
-    f2 = metrics_score[5]/len(test_x)
+# def print_score(metrics_score):
+#     jaccard = metrics_score[0]/len(test_x)
+#     f1 = metrics_score[1]/len(test_x)
+#     recall = metrics_score[2]/len(test_x)
+#     precision = metrics_score[3]/len(test_x)
+#     acc = metrics_score[4]/len(test_x)
+#     f2 = metrics_score[5]/len(test_x)
 
-    print(f"Jaccard: {jaccard:1.4f} - F1: {f1:1.4f} - Recall: {recall:1.4f} - Precision: {precision:1.4f} - Acc: {acc:1.4f} - F2: {f2:1.4f}")
+#     print(f"Jaccard: {jaccard:1.4f} - F1: {f1:1.4f} - Recall: {recall:1.4f} - Precision: {precision:1.4f} - Acc: {acc:1.4f} - F2: {f2:1.4f}")
+
+def print_score(metrics_score):
+    iou = metrics_score[0] / len(test_x)
+    dice = metrics_score[1] / len(test_x)
+    sensitivity = metrics_score[2] / len(test_x)
+    specificity = metrics_score[3] / len(test_x)
+    accuracy = metrics_score[4] / len(test_x)
+
+    print(f"Sensitivity (Recall): {sensitivity:.4f}")
+    print(f"Specificity         : {specificity:.4f}")
+    print(f"Accuracy            : {accuracy:.4f}")
+    print(f"IoU (Jaccard)       : {iou:.4f}")
+    print(f"Dice (F1-score)     : {dice:.4f}")
 
 def evaluate(model, save_path, test_x, test_y, test_l, size, embed):
-    metrics_score_1 = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    # metrics_score_1 = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    metrics_score_1 = [0.0, 0.0, 0.0, 0.0, 0.0]
     time_taken = []
 
     for i, (x, l, y) in tqdm(enumerate(zip(test_x, test_l, test_y)), total=len(test_x)):
@@ -54,14 +90,15 @@ def evaluate(model, save_path, test_x, test_y, test_l, size, embed):
         image = image.to(device)
 
         """ Label """
-        label = []
-        for word in l:
-            word_embed = embed.to_embed(word)[0]
-            label.append(word_embed)
-        label = np.array(label)
-        label = np.expand_dims(label, axis=0)
-        label = torch.from_numpy(label)
-        label = label.to(device)
+        # label = []
+        # for word in l:
+        #     word_embed = embed.to_embed(word)[0]
+        #     label.append(word_embed)
+        # label = np.array(label)
+        label_embed = embed.to_embed(l)[0]   # (300,)
+        label_embed = np.expand_dims(label_embed, axis=0)
+        label_embed = torch.from_numpy(label_embed).float().to(device)
+        
 
         """ Mask """
         mask = cv2.imread(y, cv2.IMREAD_GRAYSCALE)
@@ -79,7 +116,8 @@ def evaluate(model, save_path, test_x, test_y, test_l, size, embed):
         with torch.no_grad():
             """ FPS calculation """
             start_time = time.time()
-            p1, p2, p3 = model(image, label)
+            # p1, p2, p3 = model(image, label)
+            p1, p2, p3 = model(image, label_embed)
 
             p1 = torch.sigmoid(p1)
             p2 = torch.softmax(p2, axis=1).cpu().numpy()[0]
@@ -129,17 +167,33 @@ if __name__ == "__main__":
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = TGAPolypSeg()
     model = model.to(device)
-    checkpoint_path = "files/checkpoint.pth"
+    # checkpoint_path = "files/checkpoint.pth"
+
+    # KVASIR BEST MODEL
+    checkpoint_path = "/content/drive/MyDrive/Prashant/TGANet_Prashant/checkpoint.pth"
+
+    # BUSI BEST MODEL
+    # checkpoint_path = "/content/drive/MyDrive/Prashant/TGANet_Prashant/busi_checkpoint.pth"
+    
     model.load_state_dict(torch.load(checkpoint_path, map_location=device))
     model.eval()
+    print("MODEL LOADED!!")
 
     """ Test dataset """
-    path = "/media/nikhil/Seagate Backup Plus Drive/ML_DATASET/Kvasir-SEG"
-    (train_x, train_y, train_label), (test_x, test_y, test_label) = load_data(path)
+    # path = "/content/drive/MyDrive/Prashant/research_datasets/Kvasir_80_20_TEXT_NEW"
+    # (train_x, train_y, train_label), (test_x, test_y, test_label) = load_data(path)
+
+    test_path = "/content/drive/MyDrive/Prashant/research_datasets/Dataset_BUSI_80_20_TEXT_NEW/test"
+    test_x, test_y, test_label = load_from_excel(test_path, "Test_text.xlsx")
+    print("DATASET LOADED")
+    print("Loaded Excel Files")
+    print(f"Test samples (from excel): {len(test_x)}")
+
 
     embed = Text2Embed()
-    save_path = f"results/Kvasir-SEG/"
-    save_path = f"results/Kvasir-SEG"
+    # save_path = f"results/Kvasir-SEG/"
+    # save_path = f"results/Kvasir-SEG"
+    save_path = "/content/drive/MyDrive/Prashant/TGANet_Prashant/KVASIR_RESULTS"
     size = (256, 256)
     create_dir(f"{save_path}/all")
     create_dir(f"{save_path}/mask")

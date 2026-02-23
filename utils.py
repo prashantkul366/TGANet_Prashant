@@ -79,23 +79,37 @@ def mask_to_bbox(mask):
     return bboxes
 
 def calculate_metrics(y_true, y_pred):
-    y_true = y_true.detach().cpu().numpy()
-    y_pred = y_pred.detach().cpu().numpy()
+    y_pred = torch.sigmoid(y_pred)
+    y_pred = (y_pred > 0.5).float()
 
-    y_pred = y_pred > 0.5
-    y_pred = y_pred.reshape(-1)
-    y_pred = y_pred.astype(np.uint8)
+    y_true = y_true.float()
 
-    y_true = y_true > 0.5
-    y_true = y_true.reshape(-1)
-    y_true = y_true.astype(np.uint8)
+    TP = (y_true * y_pred).sum()
+    TN = ((1 - y_true) * (1 - y_pred)).sum()
+    FP = ((1 - y_true) * y_pred).sum()
+    FN = (y_true * (1 - y_pred)).sum()
 
-    ## Score
-    score_jaccard = jac_score(y_true, y_pred)
-    score_f1 = dice_score(y_true, y_pred)
-    score_recall = recall(y_true, y_pred)
-    score_precision = precision(y_true, y_pred)
-    score_fbeta = F2(y_true, y_pred)
-    score_acc = accuracy_score(y_true, y_pred)
+    eps = 1e-7
 
-    return [score_jaccard, score_f1, score_recall, score_precision, score_acc, score_fbeta]
+    # IoU (Jaccard)
+    iou = TP / (TP + FP + FN + eps)
+
+    # Dice (F1)
+    dice = (2 * TP) / (2 * TP + FP + FN + eps)
+
+    # Sensitivity (Recall)
+    sensitivity = TP / (TP + FN + eps)
+
+    # Specificity
+    specificity = TN / (TN + FP + eps)
+
+    # Accuracy
+    accuracy = (TP + TN) / (TP + TN + FP + FN + eps)
+
+    return [
+        iou.item(),
+        dice.item(),
+        sensitivity.item(),
+        specificity.item(),
+        accuracy.item()
+    ]
