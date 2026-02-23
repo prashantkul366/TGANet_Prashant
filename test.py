@@ -38,29 +38,29 @@ def load_from_excel(split_path, excel_name):
 
     return images, masks, labels
 
-def load_from_excel(split_path, excel_name):
-    excel_path = os.path.join(split_path, excel_name)
-    df = pd.read_excel(excel_path)
+# def load_from_excel(split_path, excel_name):
+#     excel_path = os.path.join(split_path, excel_name)
+#     df = pd.read_excel(excel_path)
 
-    images = []
-    masks = []
-    labels = []
+#     images = []
+#     masks = []
+#     labels = []
 
-    for _, row in df.iterrows():
-        filename = row["image_name"]
-        prompt = row["prompt_text"]
+#     for _, row in df.iterrows():
+#         filename = row["image_name"]
+#         prompt = row["prompt_text"]
 
-        img_path = os.path.join(split_path, "images", filename)
+#         img_path = os.path.join(split_path, "images", filename)
 
-        # 🔥 FIX: replace .jpg with .png for mask
-        mask_name = filename.replace(".jpg", ".png")
-        mask_path = os.path.join(split_path, "masks", mask_name)
+#         # 🔥 FIX: replace .jpg with .png for mask
+#         mask_name = filename.replace(".jpg", ".png")
+#         mask_path = os.path.join(split_path, "masks", mask_name)
 
-        images.append(img_path)
-        masks.append(mask_path)
-        labels.append(prompt)
+#         images.append(img_path)
+#         masks.append(mask_path)
+#         labels.append(prompt)
 
-    return images, masks, labels
+#     return images, masks, labels
 
 def process_mask(y_pred):
     y_pred = y_pred[0].cpu().numpy()
