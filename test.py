@@ -145,7 +145,12 @@ def evaluate(model, save_path, test_x, test_y, test_l, size, embed):
             # p1, p2, p3 = model(image, label)
             p1, p2, p3 = model(image, label_embed)
 
-            p1 = torch.sigmoid(p1)
+            # p1 = torch.sigmoid(p1)
+            # p2 = torch.softmax(p2, axis=1).cpu().numpy()[0]
+            # p3 = torch.softmax(p3, axis=1).cpu().numpy()[0]
+            p1, p2, p3 = model(image, label_embed)
+
+            # DO NOT APPLY SIGMOID HERE
             p2 = torch.softmax(p2, axis=1).cpu().numpy()[0]
             p3 = torch.softmax(p3, axis=1).cpu().numpy()[0]
 
