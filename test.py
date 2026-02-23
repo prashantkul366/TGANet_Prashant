@@ -24,8 +24,10 @@ def load_from_excel(split_path, excel_name):
     labels = []
 
     for _, row in df.iterrows():
-        filename = row["Filename"]
-        prompt = row["Text"]
+        # filename = row["Filename"]
+        # prompt = row["Text"]
+        filename = row["image_name"]
+        prompt = row["prompt_text"]
 
         img_path = os.path.join(split_path, "images", filename)
         mask_path = os.path.join(split_path, "masks", filename)
@@ -180,7 +182,7 @@ if __name__ == "__main__":
     print("MODEL LOADED!!")
 
     """ Test dataset """
-    # path = "/content/drive/MyDrive/Prashant/research_datasets/Kvasir_80_20_TEXT_NEW"
+    # path = "/content/drive/MyDrive/Prashant/research_datasets/Kvasir_80_20_TEXT_NEW/test"
     # (train_x, train_y, train_label), (test_x, test_y, test_label) = load_data(path)
 
     test_path = "/content/drive/MyDrive/Prashant/research_datasets/Kvasir_80_20_TEXT_NEW/val"
