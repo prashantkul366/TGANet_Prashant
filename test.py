@@ -201,10 +201,10 @@ if __name__ == "__main__":
     # checkpoint_path = "files/checkpoint.pth"
 
     # KVASIR BEST MODEL
-    # checkpoint_path = "/content/drive/MyDrive/Prashant/TGANet_Prashant/checkpoint.pth"
+    checkpoint_path = "/content/drive/MyDrive/Prashant/TGANet_Prashant/checkpoint.pth"
 
     # BUSI BEST MODEL
-    checkpoint_path = "/content/drive/MyDrive/Prashant/TGANet_Prashant/busi_checkpoint.pth"
+    # checkpoint_path = "/content/drive/MyDrive/Prashant/TGANet_Prashant/busi_checkpoint.pth"
     
     
     model.load_state_dict(torch.load(checkpoint_path, map_location=device))
@@ -215,11 +215,11 @@ if __name__ == "__main__":
     # path = "/content/drive/MyDrive/Prashant/research_datasets/Kvasir_80_20_TEXT_NEW/test"
     # (train_x, train_y, train_label), (test_x, test_y, test_label) = load_data(path)
 
-    # test_path = "/content/drive/MyDrive/Prashant/research_datasets/Kvasir_80_20_TEXT_NEW/val"
-    # test_x, test_y, test_label = load_from_excel(test_path, "Val_text.xlsx")
+    test_path = "/content/drive/MyDrive/Prashant/research_datasets/Kvasir_80_20_TEXT_NEW/val"
+    test_x, test_y, test_label = load_from_excel(test_path, "Val_text.xlsx")
 
-    test_path = "/content/drive/MyDrive/Prashant/research_datasets/Dataset_BUSI_80_20_TEXT_NEW/test"
-    test_x, test_y, test_label = load_from_excel(test_path, "Test_text.xlsx")
+    # test_path = "/content/drive/MyDrive/Prashant/research_datasets/Dataset_BUSI_80_20_TEXT_NEW/test"
+    # test_x, test_y, test_label = load_from_excel(test_path, "Test_text.xlsx")
     print("DATASET LOADED")
     print("Loaded Excel Files")
     print(f"Test samples (from excel): {len(test_x)}")
@@ -228,8 +228,8 @@ if __name__ == "__main__":
     embed = Text2Embed()
     # save_path = f"results/Kvasir-SEG/"
     # save_path = f"results/Kvasir-SEG"
-    # save_path = "/content/drive/MyDrive/Prashant/TGANet_Prashant/KVASIR_RESULTS"
-    save_path = "/content/drive/MyDrive/Prashant/TGANet_Prashant/BUSI_RESULTS"
+    save_path = "/content/drive/MyDrive/Prashant/TGANet_Prashant/KVASIR_RESULTS"
+    # save_path = "/content/drive/MyDrive/Prashant/TGANet_Prashant/BUSI_RESULTS"
     size = (256, 256)
     create_dir(f"{save_path}/all")
     create_dir(f"{save_path}/mask")
